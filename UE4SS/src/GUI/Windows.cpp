@@ -1,5 +1,7 @@
 #include <GUI/Windows.hpp>
 
+#include <algorithm>
+
 #include <GUI/DX11.hpp>
 #include <UE4SSProgram.hpp>
 #include <backends/imgui_impl_win32.h>
@@ -37,6 +39,50 @@ namespace RC::GUI
 
     auto Backend_Windows::create_window(int loc_x, int loc_y, int size_x, int size_y) -> void
     {
+        constexpr int minimum_width = 800;
+        constexpr int minimum_height = 500;
+        constexpr int default_width = 1100;
+        constexpr int default_height = 700;
+
+        RECT work_area{};
+        if (!::SystemParametersInfoW(SPI_GETWORKAREA, 0, &work_area, 0))
+        {
+            work_area = {0, 0, ::GetSystemMetrics(SM_CXSCREEN), ::GetSystemMetrics(SM_CYSCREEN)};
+        }
+
+        const int work_width = std::max(1L, work_area.right - work_area.left);
+        const int work_height = std::max(1L, work_area.bottom - work_area.top);
+        const int effective_minimum_width = std::min(minimum_width, work_width);
+        const int effective_minimum_height = std::min(minimum_height, work_height);
+        const bool invalid_saved_size = size_x < effective_minimum_width || size_y < effective_minimum_height;
+        const bool center_requested = loc_x < 0 || loc_y < 0;
+
+        if (invalid_saved_size || center_requested)
+        {
+            size_x = std::min(default_width, work_width);
+            size_y = std::min(default_height, work_height);
+            loc_x = work_area.left + (work_width - size_x) / 2;
+            loc_y = work_area.top + (work_height - size_y) / 2;
+        }
+        else
+        {
+            size_x = std::clamp(size_x, effective_minimum_width, work_width);
+            size_y = std::clamp(size_y, effective_minimum_height, work_height);
+
+            const bool saved_position_is_offscreen = loc_x >= work_area.right || loc_y >= work_area.bottom || loc_x + size_x <= work_area.left ||
+                                                     loc_y + size_y <= work_area.top;
+            if (saved_position_is_offscreen)
+            {
+                loc_x = work_area.left + (work_width - size_x) / 2;
+                loc_y = work_area.top + (work_height - size_y) / 2;
+            }
+            else
+            {
+                loc_x = std::clamp(loc_x, static_cast<int>(work_area.left), static_cast<int>(work_area.right) - size_x);
+                loc_y = std::clamp(loc_y, static_cast<int>(work_area.top), static_cast<int>(work_area.bottom) - size_y);
+            }
+        }
+
         StringType title_bar_text{STR("UE4SS Debugging Tools")};
         if (dynamic_cast<Backend_DX11*>(m_gfx_backend))
         {

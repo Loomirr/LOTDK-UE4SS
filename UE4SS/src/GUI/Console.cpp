@@ -1,16 +1,66 @@
 #include <ctype.h>
+#include <atomic>
+#include <deque>
 #include <memory>
+#include <mutex>
 
 #include <DynamicOutput/DynamicOutput.hpp>
 #include <GUI/Console.hpp>
 #include <GUI/GUI.hpp>
 #include <GUI/ImGuiUtility.hpp>
+#include <GUI/LOTDKConsoleBridge.hpp>
 #include <UE4SSProgram.hpp>
 
 #include <imgui_internal.h>
 
 namespace RC::GUI
 {
+    namespace LOTDKConsoleBridge
+    {
+        namespace
+        {
+            std::mutex s_pending_commands_mutex{};
+            std::deque<std::string> s_pending_commands{};
+            std::atomic_bool s_console_tab_requested{};
+            std::atomic_bool s_input_focus_requested{};
+        }
+
+        auto request_console_tab_and_input_focus() -> void
+        {
+            s_console_tab_requested.store(true, std::memory_order_release);
+            s_input_focus_requested.store(true, std::memory_order_release);
+        }
+
+        auto consume_console_tab_request() -> bool
+        {
+            return s_console_tab_requested.exchange(false, std::memory_order_acq_rel);
+        }
+
+        auto consume_input_focus_request() -> bool
+        {
+            return s_input_focus_requested.exchange(false, std::memory_order_acq_rel);
+        }
+
+        auto queue_command(std::string command) -> void
+        {
+            std::lock_guard guard(s_pending_commands_mutex);
+            s_pending_commands.emplace_back(std::move(command));
+        }
+
+        auto take_pending_command() -> std::optional<std::string>
+        {
+            std::lock_guard guard(s_pending_commands_mutex);
+            if (s_pending_commands.empty())
+            {
+                return std::nullopt;
+            }
+
+            auto command = std::move(s_pending_commands.front());
+            s_pending_commands.pop_front();
+            return command;
+        }
+    } // namespace LOTDKConsoleBridge
+
     // Wrapper for CalcTextSizeA.
     auto CalcTextSize(const char* text, float max_width, const char** remaining = nullptr) -> ImVec2
     {
@@ -129,10 +179,39 @@ namespace RC::GUI
 
         /**/
 
-        std::lock_guard<std::mutex> guard(m_lines_mutex);
-        m_text_editor.Render("TextEditor", {-16.0f, -31.0f + -8.0f});
+        {
+            std::lock_guard<std::mutex> guard(m_lines_mutex);
+            m_text_editor.Render("TextEditor", {-16.0f, -72.0f});
+            ImGui_AutoScroll("TextEditor", &m_previous_max_scroll_y);
+        }
 
-        ImGui_AutoScroll("TextEditor", &m_previous_max_scroll_y);
+        ImGui::Separator();
+        ImGui::TextUnformatted("Unreal command");
+        ImGui::SameLine();
+        ImGui::PushItemWidth(-12.0f);
+
+        const bool focus_requested = LOTDKConsoleBridge::consume_input_focus_request();
+        if (focus_requested)
+        {
+            ImGui::SetKeyboardFocusHere();
+        }
+
+        const ImGuiInputTextFlags command_flags = ImGuiInputTextFlags_EnterReturnsTrue;
+        if (ImGui::InputText("##lotdk_console_command", m_input_buffer, IM_ARRAYSIZE(m_input_buffer), command_flags))
+        {
+            std::string command{m_input_buffer};
+            const auto first_non_space = command.find_first_not_of(" \t\r\n");
+            if (first_non_space != std::string::npos)
+            {
+                const auto last_non_space = command.find_last_not_of(" \t\r\n");
+                command = command.substr(first_non_space, last_non_space - first_non_space + 1);
+                LOTDKConsoleBridge::queue_command(command);
+                Output::send<LogLevel::Default>(STR("[LOTDK Console] > {}\n"), ensure_str(command));
+            }
+            m_input_buffer[0] = '\0';
+            LOTDKConsoleBridge::request_console_tab_and_input_focus();
+        }
+        ImGui::PopItemWidth();
         //*/
     }
 

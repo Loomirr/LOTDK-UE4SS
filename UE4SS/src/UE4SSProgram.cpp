@@ -11,6 +11,7 @@
 #include <format>
 #include <fstream>
 #include <limits>
+#include <mutex>
 #include <unordered_set>
 #include <fmt/chrono.h>
 #include <Profiler/Profiler.hpp>
@@ -19,6 +20,7 @@
 #include <GUI/ConsoleOutputDevice.hpp>
 #include <GUI/GUI.hpp>
 #include <GUI/LiveView.hpp>
+#include <GUI/LOTDKConsoleBridge.hpp>
 #include <Helpers/ASM.hpp>
 #include <Helpers/Format.hpp>
 #include <Helpers/Integer.hpp>
@@ -64,6 +66,58 @@
 
 namespace RC
 {
+    namespace
+    {
+        auto execute_lotdk_console_command(const std::string& command, Unreal::UObject* world_context) -> bool
+        {
+            using namespace Unreal;
+
+            struct ExecuteConsoleCommandParams
+            {
+                const UObject* WorldContextObject{};
+                FString Command{};
+                UObject* SpecificPlayer{};
+            };
+            static_assert(sizeof(ExecuteConsoleCommandParams) == 0x20);
+
+            static UFunction* execute_function = UObjectGlobals::StaticFindObject<UFunction*>(
+                    nullptr,
+                    nullptr,
+                    STR("/Script/Engine.KismetSystemLibrary:ExecuteConsoleCommand"));
+            static UObject* kismet_cdo = UObjectGlobals::StaticFindObject<UObject*>(
+                    nullptr,
+                    nullptr,
+                    STR("/Script/Engine.Default__KismetSystemLibrary"));
+
+            if (!execute_function || !kismet_cdo)
+            {
+                Output::send<LogLevel::Error>(STR("[LOTDK Console] ExecuteConsoleCommand reflection targets are unavailable.\n"));
+                return false;
+            }
+            if (execute_function->GetParmsSize() != sizeof(ExecuteConsoleCommandParams))
+            {
+                Output::send<LogLevel::Error>(STR("[LOTDK Console] ExecuteConsoleCommand layout mismatch: reflected=0x{:X} local=0x{:X}.\n"),
+                                              execute_function->GetParmsSize(),
+                                              sizeof(ExecuteConsoleCommandParams));
+                return false;
+            }
+
+            if (!world_context)
+            {
+                Output::send<LogLevel::Error>(STR("[LOTDK Console] No world context is ready for '{}'.\n"), ensure_str(command));
+                return false;
+            }
+
+            ExecuteConsoleCommandParams params{};
+            params.WorldContextObject = world_context;
+            params.Command = FString{ensure_str(command)};
+            params.SpecificPlayer = nullptr;
+            kismet_cdo->ProcessEvent(execute_function, &params);
+            Output::send<LogLevel::Default>(STR("[LOTDK Console] Executed '{}'.\n"), ensure_str(command));
+            return true;
+        }
+    } // namespace
+
     // Commented out because this system (turn off hotkeys when in-game console is open) it doesn't work properly.
     /*
     struct RC_UE_API FUEDeathListener : public Unreal::FUObjectCreateListener
@@ -984,12 +1038,12 @@ namespace RC
             {
                 m_debugging_gui.get_live_view().set_listeners_allowed(false);
             }
-            register_keydown_event(Input::Key::O, {Input::ModifierKey::CONTROL}, [&]() {
+            register_keydown_event(Input::Key::OEM_THREE, {}, [&]() {
                 TRY([&] {
+                    GUI::LOTDKConsoleBridge::request_console_tab_and_input_focus();
                     std::lock_guard guard(m_render_thread_mutex);
                     if (s_gui_initializing_for_game_thread)
                     {
-                        Output::send<LogLevel::Verbose>(STR("Cancelled GUI toggle during GUI initialization.\n"));
                         return;
                     }
                     auto was_gui_open = get_debugging_ui().is_open();
@@ -1003,7 +1057,6 @@ namespace RC
                             break;
                         case GUI::RenderMode::EngineTick:
                         case GUI::RenderMode::GameViewportClientTick:
-                            // The hooked game function will pick up on the window being "open", and start rendering.
                             s_gui_initialized_for_game_thread = false;
                             s_gui_initializing_for_game_thread = true;
                             get_debugging_ui().set_open(true);
@@ -1013,6 +1066,22 @@ namespace RC
                     }
                 });
             });
+
+            Hook::RegisterProcessEventPreCallback(
+                    [](auto&, UObject* Context, UFunction*, void*) {
+                        for (auto command = GUI::LOTDKConsoleBridge::take_pending_command(); command; command = GUI::LOTDKConsoleBridge::take_pending_command())
+                        {
+                            try
+                            {
+                                execute_lotdk_console_command(*command, Context ? Context->GetWorld() : nullptr);
+                            }
+                            catch (const std::exception& error)
+                            {
+                                Output::send<LogLevel::Error>(STR("[LOTDK Console] Command '{}' failed: {}\n"), ensure_str(*command), ensure_str(error.what()));
+                            }
+                        }
+                    },
+                    {false, false, STR("UE4SS"), STR("LOTDKConsoleCommandDispatch")});
         }
 
 #ifdef TIME_FUNCTION_MACRO_ENABLED

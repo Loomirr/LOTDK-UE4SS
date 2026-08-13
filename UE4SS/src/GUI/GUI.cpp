@@ -10,6 +10,7 @@
 #include <GUI/Dumpers.hpp>
 #include <GUI/GLFW3_OpenGL3.hpp>
 #include <GUI/LuaDebugger.hpp>
+#include <GUI/LOTDKConsoleBridge.hpp>
 #include <GUI/Profilers.hpp>
 #include <GUI/Windows.hpp>
 #include <fonts/droidsansfallback.cpp>
@@ -28,6 +29,19 @@
 
 namespace RC::GUI
 {
+    namespace
+    {
+        constexpr int32_t minimum_backend_window_width = 800;
+        constexpr int32_t minimum_backend_window_height = 500;
+        constexpr int32_t default_backend_window_width = 1100;
+        constexpr int32_t default_backend_window_height = 700;
+
+        auto is_valid_backend_window_size(const WindowSize& size) -> bool
+        {
+            return size.x >= minimum_backend_window_width && size.y >= minimum_backend_window_height;
+        }
+    }
+
     ImColor g_imgui_bg_color{0.22f, 0.22f, 0.22f, 1.00f};
     ImColor g_imgui_text_color = ImColor{0.95f, 0.95f, 0.95f, 1.00f};
     ImColor g_imgui_text_inactive_color = ImVec4{0.50f, 0.50f, 0.50f, 1.00f};
@@ -79,7 +93,9 @@ namespace RC::GUI
 
             if (ImGui::BeginTabBar("##MainTabBar", ImGuiTabBarFlags_None))
             {
-                if (ImGui::BeginTabItem(ICON_FA_TERMINAL " Console"))
+                const bool select_console_tab = LOTDKConsoleBridge::consume_console_tab_request();
+                const ImGuiTabItemFlags console_tab_flags = select_console_tab ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None;
+                if (ImGui::BeginTabItem(ICON_FA_TERMINAL " Console", nullptr, console_tab_flags))
                 {
                     get_console().render_search_box();
 
@@ -393,6 +409,10 @@ namespace RC::GUI
 
         auto const current_window_size =
                 debugging_gui.m_os_backend->is_valid() ? debugging_gui.m_os_backend->get_window_size() : debugging_gui.m_gfx_backend->get_window_size();
+        if (!is_valid_backend_window_size(current_window_size))
+        {
+            return false;
+        }
         if (current_window_size.x != settings.size_x || current_window_size.y != settings.size_y)
         {
             settings.size_x = current_window_size.x;
@@ -446,12 +466,19 @@ namespace RC::GUI
     {
         /*ImGuiContext& g = *ctx;*/
         auto& debugging_gui = UE4SSProgram::get_program().get_debugging_ui();
+        auto& settings = debugging_gui.m_backend_window_settings;
 
         // Write settings for backend window size/position
         auto current_window_size =
                 debugging_gui.m_os_backend->is_valid() ? debugging_gui.m_os_backend->get_window_size() : debugging_gui.m_gfx_backend->get_window_size();
         auto current_window_position =
                 debugging_gui.m_os_backend->is_valid() ? debugging_gui.m_os_backend->get_window_position() : debugging_gui.m_gfx_backend->get_window_position();
+
+        if (!is_valid_backend_window_size(current_window_size))
+        {
+            current_window_size = {settings.size_x, settings.size_y};
+            current_window_position = {settings.pos_x, settings.pos_y};
+        }
 
         // Write to text buffer
         buf->reserve(buf->size() + 15 * 6); // ballpark reserve
@@ -503,6 +530,15 @@ namespace RC::GUI
 
         auto& debugging_gui = UE4SSProgram::get_program().get_debugging_ui();
         WindowSettings& settings = debugging_gui.m_backend_window_settings;
+
+        if (!is_valid_backend_window_size({settings.size_x, settings.size_y}))
+        {
+            // Negative coordinates tell the Win32 backend to center this repaired default.
+            settings.pos_x = -1;
+            settings.pos_y = -1;
+            settings.size_x = default_backend_window_width;
+            settings.size_y = default_backend_window_height;
+        }
 
         m_os_backend->create_window(settings.pos_x, settings.pos_y, settings.size_x, settings.size_y);
 
