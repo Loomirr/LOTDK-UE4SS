@@ -211,6 +211,7 @@ int _tmain(int argc, TCHAR* argv[])
     cpp_file << "#include <limits>" << endl;
     cpp_file << "#include <string>" << endl;
     cpp_file << "#include <vector>" << endl;
+    cpp_file << "#include <unordered_set>" << endl;
     cpp_file << endl;
     cpp_file << "#define WIN32_LEAN_AND_MEAN" << endl;
     cpp_file << "#include <Windows.h>" << endl;
@@ -443,32 +444,34 @@ int _tmain(int argc, TCHAR* argv[])
     // extends the PawnMetaData scan roots through Config\\Game.ini; registry-only
     // plugins then contribute the individual DCMD rows.  A plain alphabetical
     // order can place an individual registry plugin before the core plugin.
-    cpp_file << "        std::sort(descriptors.begin(), descriptors.end(), [](const fs::path& left, const fs::path& right)" << endl;
+    cpp_file << "        struct Descriptor { fs::path path; bool hasGameIni; std::wstring sortKey; };" << endl;
+    cpp_file << "        std::vector<Descriptor> indexed; indexed.reserve(descriptors.size());" << endl;
+    cpp_file << "        for (const auto& path : descriptors) {" << endl;
+    cpp_file << "            std::error_code probeError;" << endl;
+    cpp_file << "            indexed.push_back({path, fs::is_regular_file(path.parent_path() / L\"Config\" / L\"Game.ini\", probeError), lotdk_expanded_lowercase(path.wstring())});" << endl;
+    cpp_file << "        }" << endl;
+    cpp_file << "        std::sort(indexed.begin(), indexed.end(), [](const Descriptor& left, const Descriptor& right)" << endl;
     cpp_file << "        {" << endl;
-    cpp_file << "            std::error_code leftError;" << endl;
-    cpp_file << "            std::error_code rightError;" << endl;
-    cpp_file << "            const bool leftHasGameIni = fs::is_regular_file(left.parent_path() / L\"Config\" / L\"Game.ini\", leftError);" << endl;
-    cpp_file << "            const bool rightHasGameIni = fs::is_regular_file(right.parent_path() / L\"Config\" / L\"Game.ini\", rightError);" << endl;
-    cpp_file << "            if (leftHasGameIni != rightHasGameIni)" << endl;
+    cpp_file << "            if (left.hasGameIni != right.hasGameIni)" << endl;
     cpp_file << "            {" << endl;
-    cpp_file << "                return leftHasGameIni;" << endl;
+    cpp_file << "                return left.hasGameIni;" << endl;
     cpp_file << "            }" << endl;
-    cpp_file << "            return lotdk_expanded_lowercase(left.wstring()) < lotdk_expanded_lowercase(right.wstring());" << endl;
+    cpp_file << "            return left.sortKey < right.sortKey;" << endl;
     cpp_file << "        });" << endl;
+    cpp_file << "        descriptors.clear(); for (auto& descriptor : indexed) descriptors.push_back(std::move(descriptor.path));" << endl;
     cpp_file << "        // Registry destinations are normally one descriptor per plugin.  Keep" << endl;
     cpp_file << "        // the shallow, sorted descriptor if an interrupted older install left" << endl;
     cpp_file << "        // a nested duplicate behind; passing a plugin twice can corrupt the" << endl;
     cpp_file << "        // AssetRegistry discovery state before the game reaches its menu." << endl;
     cpp_file << "        std::vector<fs::path> uniqueDescriptors;" << endl;
-    cpp_file << "        std::vector<std::wstring> seenPluginNames;" << endl;
+    cpp_file << "        std::unordered_set<std::wstring> seenPluginNames;" << endl;
     cpp_file << "        for (const fs::path& descriptor : descriptors)" << endl;
     cpp_file << "        {" << endl;
     cpp_file << "            const std::wstring pluginName = lotdk_expanded_lowercase(descriptor.stem().wstring());" << endl;
-    cpp_file << "            if (std::find(seenPluginNames.begin(), seenPluginNames.end(), pluginName) != seenPluginNames.end())" << endl;
+    cpp_file << "            if (!seenPluginNames.insert(pluginName).second)" << endl;
     cpp_file << "            {" << endl;
     cpp_file << "                continue;" << endl;
     cpp_file << "            }" << endl;
-    cpp_file << "            seenPluginNames.push_back(pluginName);" << endl;
     cpp_file << "            uniqueDescriptors.push_back(descriptor);" << endl;
     cpp_file << "        }" << endl;
     cpp_file << "        descriptors = std::move(uniqueDescriptors);" << endl;

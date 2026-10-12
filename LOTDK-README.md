@@ -10,7 +10,7 @@ This is a community compatibility project. It is not an official RE-UE4SS releas
 - Pinned upstream commit: `b872ad111394cfabda302dbe744f6893126dfd87`
 - Upstream license: MIT
 - LOTDK build profile: `Game__Shipping__Win64`
-- Tested LOTDK executable version: `1312910`
+- Current package compatibility: game build `1353284` / Steam build `25720154`.
 
 The original upstream [`README.md`](README.md) documents the complete UE4SS feature set, API, build requirements, and general architecture. This file documents only the LOTDK-specific distribution and maintained changes.
 
@@ -29,7 +29,13 @@ This fork adds and maintains:
 - Validation and repair of missing, corrupt, tiny, or off-screen saved Debugging Tools window geometry.
 - Release packaging, validation, checksums, and documentation for a self-contained player installation.
 
-The LOTDK Expanded bootstrap is inert when LOTDK Expanded is not installed. LOTDK Expanded, Batcomputer, LOTDK Mod Manager, custom suits, and other gameplay mods are separate projects and are not included in this source repository.
+The LOTDK Expanded bootstrap is inert when LOTDK Expanded is not installed. The bundled runtime's maintained source and regression tests are in [`LOTDKExpanded`](LOTDKExpanded/README.md). Batcomputer, LOTDK Mod Manager and authored character/vehicle assets remain separate projects.
+
+## 0.1.9 performance update
+
+See [release notes](releases/0.1.9/RELEASE-NOTES.md) for the suit-menu lookup fix, bounded event/prepared-class caches, reduced logging overhead and registry-plugin discovery optimization. The exact player DLLs passed an existing-installation gameplay test: suit-selection hitches were reported resolved and Joker/Harley traversal was reported working. Offline tests and package integrity checks passed; a separate clean-install launch of the full ZIP has not been performed. First-time asset loading can still pause.
+
+The full archive is for clean installs. The update-from-0.1.8 archive requires a complete existing 0.1.8 installation and preserves settings/mod lists. Neither archive contains authored mods, game assets, saves or mappings.
 
 ## Verified functionality
 
@@ -46,7 +52,7 @@ The v0.1.0 player package has been tested for:
 - Native custom-suit discovery, selection, startup restoration, and gameplay.
 - Recovery startup using `--disable-ue4ss`.
 
-Some optional UE4SS lifecycle hooks, including `LoadMap`, `InitGameState`, `BeginPlay`, and `EndPlay`, are unavailable in the current LOTDK compatibility profile. Ordinary Lua loading and keybinds are verified, but a Lua mod that specifically requires one of those hooks may need a LOTDK-specific adaptation.
+Some optional lifecycle hooks are deliberately disabled or unavailable. The packaged profile enables EngineTick and EndPlay for integrated traversal support. Ordinary Lua loading and keybinds are verified, but mods depending on other lifecycle hooks may need LOTDK-specific adaptation.
 
 ## Player installation
 

@@ -1,0 +1,31 @@
+{
+  "passed": true,
+  "archives": [
+    {
+      "file": "Loomirr-UE4SS-LOTDK-v0.1.9.zip",
+      "bytes": 7552281,
+      "sha256": "4C7024DB7AE1372D087A640AB630BB65933A6BC9BE11F2641D97BA092F46DFED",
+      "entries": 53
+    },
+    {
+      "file": "Loomirr-UE4SS-LOTDK-v0.1.9-update-from-0.1.8.zip",
+      "bytes": 322312,
+      "sha256": "AEA29C4F95F8106BC71A2DE7BD7574D6EB43677E49D2EB76DACDF34E3B727E9F",
+      "entries": 9
+    }
+  ],
+  "changedFiles": [
+    "Binaries/Win64/dwmapi.dll",
+    "Binaries/Win64/ue4ss/Mods/LOTDKExpanded/capabilities.json",
+    "Binaries/Win64/ue4ss/Mods/LOTDKExpanded/dlls/main.dll",
+    "Documentation/CHECKSUMS.txt",
+    "Documentation/NOTICE.txt",
+    "Documentation/README.md",
+    "Documentation/RELEASE-NOTES.md",
+    "Documentation/SOURCE-AND-BUILD.md",
+    "Documentation/VERSION.txt"
+  ],
+  "baselineOverlayMatchesFull": true,
+  "privacyPassed": true,
+  "cleanInstallLaunchTested": false
+}
