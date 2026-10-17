@@ -20,6 +20,7 @@
 #include <array>
 #include <mutex>
 #include "Policy.hpp"
+#include "ExpandedCharacterModes.hpp"
 #include "../UnrealEventFilter.hpp"
 #include "CallSite.hpp"
 #include "NormalPartyPolicy.hpp"

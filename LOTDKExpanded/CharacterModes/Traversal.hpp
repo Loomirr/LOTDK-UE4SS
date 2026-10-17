@@ -42,7 +42,8 @@ bool eligible(UObject* pawn) {
     if(!ready || !profileReady || !villainsInNormal || !pawn ||
        pawn->HasAnyFlags(static_cast<EObjectFlags>(RF_ClassDefaultObject|RF_ArchetypeObject)) || !pawn->GetClassPrivate())return false;
     const auto path=pawn->GetClassPrivate()->GetPathName();
-    if(!CrossTraversal::nativeVillain(path))return false;
+    const bool registered=ExpandedCharacterModesIsRegisteredVillain(path);
+    if(!CrossTraversal::nativeVillain(path) && !registered)return false;
     const bool local=boolQuery(pawn,STR("IsPlayerControlled")).value_or(false) &&
         boolQuery(pawn,STR("IsLocallyControlled")).value_or(false);
     if(!local || !boolQuery(pawn,STR("HasAuthority")).value_or(false))return false;
@@ -52,7 +53,7 @@ bool eligible(UObject* pawn) {
     if(!player || !player->GetClassPrivate() || !pawn->GetWorld())return false;
     auto* localClass=UObjectGlobals::StaticFindObject<UClass*>(nullptr,nullptr,STR("/Script/Engine.LocalPlayer"));
     if(!localClass || !player->IsA(localClass))return false;
-    return CrossTraversal::eligible(true,worldMode(pawn),true,true,path);
+    return CrossTraversal::eligible(true,worldMode(pawn),true,true,path,registered);
 }
 bool validAsc(UObject* asc,UObject* pawn) {
     auto* cls=UObjectGlobals::StaticFindObject<UClass*>(nullptr,nullptr,STR("/Script/TtGameplayAbilities.TtAbilitySystemComponent"));

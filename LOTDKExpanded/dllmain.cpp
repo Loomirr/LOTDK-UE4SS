@@ -1,5 +1,6 @@
 #include <Mod/CppUserModBase.hpp>
 #include "CharacterModes/ExpandedCharacterModes.hpp"
+#include "CharacterModes/TraversalPolicy.hpp"
 #include "UnrealEventFilter.hpp"
 #include "VerboseLog.hpp"
 #include "PreparedClassCache.hpp"
@@ -6444,6 +6445,25 @@ namespace
             !contains(full_name, STR("Widget"));
     }
 
+}
+
+bool ExpandedCharacterModesIsRegisteredVillain(std::wstring_view playableClassPath)
+{
+    if (!NativeSuitModManifestsLoaded) return false;
+    size_t matches = 0;
+    for (const auto& manifest : LoadedNativeSuitModManifests)
+    {
+        if (!manifest.Valid) continue;
+        for (const auto& suit : manifest.Suits)
+        {
+            if (!suit.Valid || !suit.Enabled || suit.PlayableClassPath != playableClassPath) continue;
+            if (!CrossTraversal::registeredVillain(playableClassPath, suit.PlayableClassPath,
+                    native_manifest_character_scope_for_suit(suit), true)) return false;
+            ++matches;
+        }
+    }
+    // Ambiguous installed identities fail closed just like an unregistered class.
+    return matches == 1;
 }
 
 class LOTDKExpanded : public CppUserModBase

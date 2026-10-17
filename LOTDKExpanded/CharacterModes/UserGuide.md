@@ -21,7 +21,7 @@ Old content-only Batcomputer mods with character-mode INIs remain readable; do n
 
 ## Controls
 
-- **F9 — Joker & Harley in Normal Mode:** adds their suits/previews to normal mode and supplies the existing locally controlled normal-mode grapple/glide support. Mayhem keeps native traversal progression.
+- **F9 — Joker & Harley in Normal Mode:** adds their suits/previews to normal mode and supplies locally controlled normal-mode grapple/glide support. This includes enabled, valid modded suits registered under Joker or Harley's exact character scope. Mayhem keeps native traversal progression and upgrade requirements; support grants are session-only and removed on leaving normal mode or changing pawns.
 - **F10 — Heroes in Mayhem:** adds native playable hero families to Mayhem and permits switching away from Batman.
 - **F8 — Free Party Normal:** permits replacing Batman in normal free roam. Does not unlock characters or bypass mission requirements.
 
