@@ -86,6 +86,7 @@ generate_build_configurations()
 setup_build_configuration()
 
 # Add subdirectories for dependencies and projects
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/ApplyLotdkUnrealPatch.cmake")
 add_subdirectory("deps")
 add_subdirectory("cppmods")
 

@@ -948,20 +948,16 @@ namespace RC
 
         output_all_member_offsets(IsCoalesced::Yes);
 
-        bool can_create_custom_events{true};
         if (!UObject::ProcessLocalScriptFunctionInternal.is_ready() && Unreal::Version::IsAtLeast(4, 22))
         {
-            can_create_custom_events = false;
-            Output::send<LogLevel::Warning>(STR("ProcessLocalScriptFunction is not available, the following features will be unavailable:\n"));
+            if (!config.bHookProcessInternal && !config.bHookProcessLocalScriptFunction)
+                Output::send(STR("[Capabilities] Blueprint script-hook discovery disabled by configuration; custom Blueprint event creation is unavailable.\n"));
+            else
+                Output::send<LogLevel::Warning>(STR("[Capabilities] ProcessLocalScriptFunction address unavailable despite enabled discovery; custom Blueprint event creation is unavailable.\n"));
         }
         else if (!UObject::ProcessInternalInternal.is_ready() && Unreal::Version::IsBelow(4, 22))
         {
-            can_create_custom_events = false;
-            Output::send<LogLevel::Warning>(STR("ProcessInternal is not available, the following features will be unavailable:\n"));
-        }
-        if (!can_create_custom_events)
-        {
-            Output::send<LogLevel::Warning>(STR("<Put function here responsible for creating custom UFunctions or events for BPs>\n"));
+            Output::send<LogLevel::Warning>(STR("[Capabilities] ProcessInternal address unavailable; custom Blueprint event creation is unavailable.\n"));
         }
         if (!Unreal::GNatives_Internal)
         {

@@ -1,0 +1,33 @@
+{
+  "passed": true,
+  "archives": [
+    {
+      "file": "Loomirr-UE4SS-LOTDK-v0.2.zip",
+      "bytes": 7550289,
+      "sha256": "EDEE0143AF77438ECBF81DFF47EFDC7B3B6D110B292600FEF956DD5F43C648C9",
+      "entries": 53
+    },
+    {
+      "file": "Loomirr-UE4SS-LOTDK-v0.2-update-from-0.1.9.zip",
+      "bytes": 7093932,
+      "sha256": "DFD158A68D43640BE998FB80A3857B79E1A221E88EEDD765B9AABB0E89664416",
+      "entries": 7
+    }
+  ],
+  "changedFiles": [
+    "Binaries/Win64/ue4ss/UE4SS.dll",
+    "Documentation/CHECKSUMS.txt",
+    "Documentation/NOTICE.txt",
+    "Documentation/README.md",
+    "Documentation/RELEASE-NOTES.md",
+    "Documentation/SOURCE-AND-BUILD.md",
+    "Documentation/VERSION.txt"
+  ],
+  "baselineOverlayMatchesFull": true,
+  "privacyPassed": true,
+  "acceptedCandidateSha256": "AC8F80C4E9095C8FE3631D0AD0D74195475F54B2735C383966FF38331A67AE73",
+  "releaseFrameworkSha256": "00166B9A81C8FE556850FADBF821E379A77D67FBE74BC4F564E962C21F0EA815",
+  "executableSectionsUnchanged": true,
+  "exportsUnchanged": 4074,
+  "cleanInstallLaunchTested": false
+}

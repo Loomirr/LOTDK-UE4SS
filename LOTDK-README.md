@@ -31,6 +31,18 @@ This fork adds and maintains:
 
 The LOTDK Expanded bootstrap is inert when LOTDK Expanded is not installed. The bundled runtime's maintained source and regression tests are in [`LOTDKExpanded`](LOTDKExpanded/README.md). Batcomputer, LOTDK Mod Manager and authored character/vehicle assets remain separate projects.
 
+## 0.2 hook diagnostics update
+
+Version 0.2 reports intentionally disabled hooks once, corrects ProcessConsoleExec
+registration to respect its configuration, and explains unavailable Blueprint
+event creation without the upstream placeholder warning. Enabled-hook failures
+remain visible and retryable. The installed candidate passed gameplay testing;
+the full package has not had a separate clean-install launch test.
+
+See [release notes](releases/0.2/RELEASE-NOTES.md). Both a full installation ZIP
+and an update-from-0.1.9 ZIP are prepared. The smaller update preserves settings
+and mod lists. Proxy, LOTDKExpanded and compatibility data are retained from 0.1.9.
+
 ## 0.1.9 performance update
 
 See [release notes](releases/0.1.9/RELEASE-NOTES.md) for the suit-menu lookup fix, bounded event/prepared-class caches, reduced logging overhead and registry-plugin discovery optimization. The exact player DLLs passed an existing-installation gameplay test: suit-selection hitches were reported resolved and Joker/Harley traversal was reported working. Offline tests and package integrity checks passed; a separate clean-install launch of the full ZIP has not been performed. First-time asset loading can still pause.
@@ -95,6 +107,12 @@ cmake --build build_cmake_Game__Shipping__Win64
 ```
 
 Consult the upstream [`README.md`](README.md) for alternative generators, profiles, and full build documentation. The final player archive additionally requires the LOTDK settings, signatures, notices, and packaging allowlist maintained outside the generic upstream build target.
+
+CMake applies the tracked `patches/unreal-hook-diagnostics.patch` to the pinned
+Unreal dependency. It accepts an already-applied patch and stops on conflicting
+edits. Before using another build system, run
+`cmake -P cmake/ApplyLotdkUnrealPatch.cmake` from the repository root. See
+[hook diagnostics](docs/lotdk-hook-diagnostics.md) for the focused tests and limits.
 
 ## Repository and release boundaries
 

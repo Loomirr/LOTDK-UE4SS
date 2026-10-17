@@ -1,0 +1,45 @@
+diff --git a/include/Unreal/Hooks/Internal/DetourInstance.hpp b/include/Unreal/Hooks/Internal/DetourInstance.hpp
+--- a/include/Unreal/Hooks/Internal/DetourInstance.hpp
++++ b/include/Unreal/Hooks/Internal/DetourInstance.hpp
+@@ -134,6 +134,18 @@
+         {
+             const auto Instance = GetDetourInstance<DetourTarget>();
+             std::lock_guard Guard(Instance->InstallMutex);
++            static bool bReportedDisabled = false; // per target, guarded by InstallMutex
++            // Configuration-disabled hooks are not failed detours. Keep the check
++            // before subclass discovery (some subclasses inspect live vtables).
++            if (!*Instance->bShouldHook)
++            {
++                if (!bReportedDisabled)
++                {
++                    Output::send(STR("[{}] Hook disabled by configuration; callbacks will not run.\n"), Instance->DetourName);
++                    bReportedDisabled = true;
++                }
++                return false;
++            }
+             if(!Instance->InstallHook()) [[unlikely]] return false;
+             if(!Instance->ActivateHook()) [[unlikely]] return false;
+             return true;
+@@ -184,6 +196,11 @@
+         {
+             if(!EnsureHooked()) [[unlikely]]
+             {
+-                Output::send<LogLevel::Error>(STR("[{}.{}.{}] Failed to add hook, detour installation likely failed!\n"), CallbackOptions.OwnerModName, DetourName, CallbackOptions.HookName);
++                // InstallHook already diagnoses unavailable targets. Do not turn
++                // intentional skips into misleading detour-installation errors.
++                if (*bShouldHook && TargetFunction->is_ready())
++                {
++                    Output::send<LogLevel::Error>(STR("[{}.{}.{}] Failed to install enabled hook; callback was not registered.\n"), CallbackOptions.OwnerModName, DetourName, CallbackOptions.HookName);
++                }
+                 return ERROR_ID;
+             }
+diff --git a/include/Unreal/Hooks/Internal/Metadata.hpp b/include/Unreal/Hooks/Internal/Metadata.hpp
+--- a/include/Unreal/Hooks/Internal/Metadata.hpp
++++ b/include/Unreal/Hooks/Internal/Metadata.hpp
+@@ -160,5 +160,5 @@
+             {
+                 &UObject::ProcessConsoleExecInternal,
+-                &ALWAYS_TRUE // always hooked since the old RegisterProcessConsoleExecCallback/Pre/Post didn't respect UnrealInitializer::Config
++                &UnrealInitializer::StaticStorage::GlobalConfig.bHookProcessConsoleExec
+             };
+         }
