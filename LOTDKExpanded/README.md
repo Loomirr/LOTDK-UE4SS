@@ -1,8 +1,8 @@
 # LOTDKExpanded runtime source
 
-This is the first-party runtime source corresponding to LOTDK UE4SS 0.2.1. It includes the native suit-selection core, integrated CharacterModes component, optional Lua controls and offline regression tests. No custom character assets or game SDK dumps are included.
+This is the first-party runtime source corresponding to LOTDK UE4SS 0.2.2. It includes the native suit-selection core, integrated CharacterModes component, optional Lua controls and offline regression tests. No custom character assets or game SDK dumps are included.
 
-The player package uses the exact in-game-tested DLL, not a fresh untested rebuild. Framework baseline: RE-UE4SS `b872ad111394cfabda302dbe744f6893126dfd87`, with this fork's LOTDK changes. CharacterModes executable guards target Steam build 25720154.
+The player package uses the exact in-game-tested DLL, not a fresh untested rebuild. Framework baseline: RE-UE4SS `b872ad111394cfabda302dbe744f6893126dfd87`, with this fork's LOTDK changes. CharacterModes executable guards target Steam build 26442335 (game build 1364061).
 
 ## Build environment
 
@@ -18,4 +18,8 @@ See `CharacterModes/README.md`, its existing license and third-party notices for
 
 ## Character Freedom suit support
 
-Normal-mode traversal support recognizes original Joker/Harley playables and enabled, validated schema-3 suits registered under their exact character scope and playable class. It never infers identity from a filename. Local-player, authority, mode and lifecycle checks remain mandatory; Mayhem keeps native upgrade progression. The exact 0.2.1 runtime passed the rebuilt Joker/Harley cape tests in an existing game installation. See `releases/0.2.1/RELEASE-NOTES.md` at the repository root for packaging and verification limits.
+Normal-mode traversal support recognizes original Joker/Harley playables and enabled, validated schema-3 suits registered under their exact character scope and playable class. It never infers identity from a filename. Local-player, authority, mode and lifecycle checks remain mandatory; Mayhem keeps native upgrade progression. The exact 0.2.2 runtime passed the rebuilt Joker/Harley cape tests in an existing game installation. See `releases/0.2.2/RELEASE-NOTES.md` at the repository root for packaging and verification limits.
+
+## November game update
+
+The guarded executable profile and traversal grant/remove addresses target game build 1364061. Traversal validation checks the native low flag byte rather than padding returned by the wider SDK enum accessor; nonzero native flags, offsets, sizes, ownership and mode checks still fail closed. The exact shipped DLL passed native/Lua checks and Joker/Harley grapple/glide acceptance in an existing game installation. Pending story-swap experiments are excluded.

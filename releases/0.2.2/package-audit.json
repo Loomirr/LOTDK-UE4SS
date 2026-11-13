@@ -1,0 +1,42 @@
+{
+  "passed": true,
+  "archives": [
+    {
+      "file": "Loomirr-UE4SS-LOTDK-v0.2.2.zip",
+      "bytes": 7550663,
+      "sha256": "C87597106EAA3FA789C3CECB21A2517C987C0403E499066EBAD5C481D6C5109A",
+      "entries": 53
+    },
+    {
+      "file": "Loomirr-UE4SS-LOTDK-v0.2.2-update-from-0.2.1.zip",
+      "bytes": 271999,
+      "sha256": "8A4D7A510869DDABB2BF27BA1D71AF872360D0290C40357EB997E6B6A64B77A1",
+      "entries": 9
+    },
+    {
+      "file": "Character-Freedom-v0.2.2-controls.zip",
+      "bytes": 15755,
+      "sha256": "9F0304177D83097164749ECFA6AA72426E70A8A97C612D6B86E7A7FE24629B13",
+      "entries": 14
+    }
+  ],
+  "changedFiles": [
+    "Binaries/Win64/ue4ss/Mods/LOTDKExpanded/capabilities.json",
+    "Binaries/Win64/ue4ss/Mods/LOTDKExpanded/dlls/main.dll",
+    "Documentation/CHARACTER-FREEDOM-UPDATE.md",
+    "Documentation/CHECKSUMS.txt",
+    "Documentation/NOTICE.txt",
+    "Documentation/README.md",
+    "Documentation/RELEASE-NOTES.md",
+    "Documentation/SOURCE-AND-BUILD.md",
+    "Documentation/VERSION.txt"
+  ],
+  "baselineOverlayMatchesFull": true,
+  "privacyPassed": true,
+  "exactAcceptedRuntimeSha256": "4629D3726D26243795CFED69059923CCB2C98F89201C8D690B5670E87A5AEE61",
+  "runtimeExportsUnchanged": 3,
+  "frameworkAndProxyUnchanged": true,
+  "existingInstallationGameplayTested": true,
+  "cleanInstallLaunchTested": false,
+  "controlsScriptsUnchanged": true
+}

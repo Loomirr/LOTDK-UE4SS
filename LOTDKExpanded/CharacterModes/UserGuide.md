@@ -2,7 +2,7 @@
 
 Install the updated LOTDK UE4SS framework with **integrated character modes API 1** first.
 These downloads contain Lua scripts only (plus enable markers and instructions); they do not include a native helper DLL.
-Requires Steam executable profile 1344350 and owned/installed Mayhem DLC for DLC characters and Mayhem.
+Requires LOTDK UE4SS 0.2.2 for executable profile 1364061 (Steam build 26442335) and owned/installed Mayhem DLC for DLC characters and Mayhem.
 
 ## Upgrade from the old downloads
 
@@ -34,7 +34,7 @@ To disable one Lua option before launch, move that mod folder outside Mods (and 
 ## Verification and troubleshooting
 
 The integrated build passed local compilation, native policy/call-site tests and Lua control checks.
-It reuses the previously gameplay-tested crossover implementation, but the **combined LOTDKExpanded build needs its own in-game acceptance test**.
+The 0.2.2 runtime passed the new game-build startup checks and Joker/Harley normal-mode grapple/glide tests in an existing installation. The three Lua controls are unchanged; the compatibility fixes are in LOTDKExpanded. A separate clean-install launch and every mission/co-op combination have not been tested.
 
 Test normal and Mayhem load/hub entry, first-hover previews, selection, switching away from Batman, traversal and restart.
 Keep save backups. Every mission, story role, vehicle and co-op combination is not covered.

@@ -1,7 +1,7 @@
 // Included inside the helper's anonymous namespace. Development candidate only.
 namespace Traversal {
 using CrossTraversal::WorldMode;
-constexpr uintptr_t GrantRva=0x6399a90, RemoveRva=0x63a5ab0;
+constexpr uintptr_t GrantRva=0x63e4f70, RemoveRva=0x63f0f90;
 struct Handles {
     TArray<int32_t> abilities;
     TArray<int64_t> effects;
@@ -159,12 +159,12 @@ bool validateSet(UObject* set,const wchar_t*& reason,bool nativeGrapple=false) {
         {STR("GrantedGameplayEffects"),0x40},{STR("GrantedAttributes"),0x50},{STR("GrantedGameplayData"),0x60},
         {STR("GrantedGameplayCueNotifyActorData"),0x70},{STR("GrantedGameplayCueNotifyStaticData"),0x80}}};
     for(auto [name,offset]:layout){auto* prop=CastField<FArrayProperty>(set->GetPropertyByNameInChain(name));
-        if(!prop || prop->GetOffset_Internal()!=offset || prop->GetSize()!=16 || prop->GetArrayFlags()!=EArrayPropertyFlags::None){
+        if(!prop || prop->GetOffset_Internal()!=offset || prop->GetSize()!=16 || !CrossTraversal::heapArrayFlags(static_cast<uint32_t>(prop->GetArrayFlags()))){
             static unsigned layoutReports{};
             if(layoutReports++<4) log(L"Traversal layout diagnostic: set="+set->GetPathName()+L" field="+name+
                 L" expected_offset="+std::to_wstring(offset)+L" actual_offset="+std::to_wstring(prop?prop->GetOffset_Internal():-1)+
                 L" size="+std::to_wstring(prop?prop->GetSize():-1)+L" flags="+
-                std::to_wstring(prop?static_cast<unsigned>(prop->GetArrayFlags()):~0U)+L" expected_size=16 expected_flags=0; no grant performed.");
+                std::to_wstring(prop?static_cast<unsigned>(prop->GetArrayFlags()):~0U)+L" expected_size=16 expected_native_flag_byte=0; no grant performed.");
             reason=STR("set layout");return false;}
         FScriptArrayHelper values(prop,prop->ContainerPtrToValuePtr<void>(set));
         if(values.Num()<0||values.Num()>128){reason=STR("set counts");return false;}

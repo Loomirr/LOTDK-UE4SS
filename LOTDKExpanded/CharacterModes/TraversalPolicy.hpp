@@ -1,7 +1,12 @@
 #pragma once
 #include <string_view>
+#include <cstdint>
 #include "Policy.hpp"
 namespace CrossTraversal {
+// UE5 stores the array flags in the low byte. The SDK enum accessor reads
+// a wider word, so adjacent padding must not decide heap-array eligibility.
+// Reject all nonzero native-byte flags, including the memory-image allocator.
+inline bool heapArrayFlags(std::uint32_t sdkFlags) { return (sdkFlags & 0xffu)==0; }
 enum class WorldMode { Unknown, Normal, Mayhem };
 inline bool nativeVillain(std::wstring_view path) {
     constexpr std::wstring_view root=L"/Game/AdditionalContent/VillainMode/Characters/Playables/";

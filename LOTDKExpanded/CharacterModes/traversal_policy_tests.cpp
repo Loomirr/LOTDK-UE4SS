@@ -5,6 +5,13 @@ int main(){
  using namespace CrossTraversal;
  int count=0;
  auto check=[&](bool v){if(!v){std::cerr<<"FAIL "<<count+1<<'\n';std::exit(1);}++count;};
+ // Reproduce the live native flag-byte/padding mismatch from the November build.
+ check(heapArrayFlags(0));
+ check(heapArrayFlags(2213494272u));
+ for(unsigned upper : {0u,0x12345600u,0xffffff00u}) {
+     check(heapArrayFlags(upper));
+     for(unsigned native=1;native<=255;++native) check(!heapArrayFlags(upper|native));
+ }
  const auto joker=L"/Game/AdditionalContent/VillainMode/Characters/Playables/Joker/BP_Joker_Default_Playable.BP_Joker_Default_Playable_C";
  const auto harley=L"/Game/AdditionalContent/VillainMode/Characters/Playables/HarleyQuinn/BP_HarleyQuinn_Default_Playable.BP_HarleyQuinn_Default_Playable_C";
  for(auto path:{joker,harley}) for(bool enabled:{false,true}) for(auto mode:{WorldMode::Unknown,WorldMode::Normal,WorldMode::Mayhem})
